@@ -1,0 +1,83 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - main: ./cmd/cmdperf
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - freebsd
+      - windows
+      - darwin
+
+archives:
+  - formats: [binary]
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+nfpms:
+  - package_name: cmdperf
+    homepage: https://github.com/miklosn/cmdperf
+    maintainer: Miklos Niedermayer <miklos.niedermayer@cray.one>
+    description: |
+      Command Performance Benchmarking.
+    formats:
+      - rpm
+      - deb
+
+changelog:
+  # Sort commits by semver if any
+  sort: asc
+  # Use custom filters
+  filters:
+    # Commit messages matching the regexp listed here will be removed from
+    # the changelog
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+  # Groups define how to group commits in the changelog.
+  # Default is no groups.
+  groups:
+    - title: Features
+      regexp: '^feat[(\\w)]*!?:'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^fix[(\\w)]*!?:'
+      order: 1
+    - title: Performance Improvements
+      regexp: '^perf[(\\w)]*!?:'
+      order: 2
+    - title: Changes
+      regexp: '^refactor[(\\w)]*!?:'
+      order: 3
+    - title: Other
+      order: 999
+
+release:
+  # GitHub release options
+  github:
+    owner: miklosn
+    name: cmdperf
+
+  # If set to true, will not auto-publish the release.
+  draft: false
+
+  # If set to auto, will use the tag to determine if it should mark as a pre-release
+  prerelease: auto
+
+  # You can change the name of the release.
+  name_template: "{{.ProjectName}} {{.Tag}}"

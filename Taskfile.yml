@@ -1,0 +1,46 @@
+version: "3"
+
+tasks:
+  showcase-colors:
+    desc: Showcase all available color schemes
+    cmds:
+      - |
+        echo "✨ Showcasing all available color schemes ✨"
+        echo ""
+
+        # Get list of color schemes
+        SCHEMES=$(go run ./cmd/cmdperf --list-color-schemes | grep "^  -" | cut -d':' -f1 | sed 's/  - //')
+
+        # Loop through each scheme and run a quick benchmark
+        for scheme in $SCHEMES; do
+          echo "==============================================="
+          echo "🎨 Testing color scheme: $scheme"
+          echo "==============================================="
+          go run ./cmd/cmdperf --color-scheme=$scheme -n 5 "true"
+          echo ""
+          echo "Press Enter to continue to the next scheme..."
+          read
+        done
+
+        echo "✨ Color scheme showcase complete! ✨"
+
+  showcase-colors-auto:
+    desc: Showcase all available color schemes (automatic, no pauses)
+    cmds:
+      - |
+        echo "✨ Showcasing all available color schemes ✨"
+        echo ""
+
+        # Get list of color schemes
+        SCHEMES=$(go run ./cmd/cmdperf --list-color-schemes | grep "^  -" | cut -d':' -f1 | sed 's/  - //')
+
+        # Loop through each scheme and run a quick benchmark
+        for scheme in $SCHEMES; do
+          echo "==============================================="
+          echo "🎨 Testing color scheme: $scheme"
+          echo "==============================================="
+          go run ./cmd/cmdperf --color-scheme=$scheme -n 5 "true"
+          echo ""
+        done
+
+        echo "✨ Color scheme showcase complete! ✨"

@@ -1,0 +1,91 @@
+name: Release
+
+permissions: write-all
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., v0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Dry run (no release)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git identity
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+
+      # Create tag if triggered by workflow_dispatch
+      - name: Create tag
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run != true
+        run: |
+          VERSION="${{ inputs.version }}"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+
+      # Determine the tag to use
+      - name: Determine tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ inputs.version }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "Using tag: $TAG"
+
+      # Install Nix
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+
+      # Run tests using devenv
+      - name: Run tests
+        shell: devenv shell -q bash -- -e {0}
+        run: |
+          devenv test
+          go mod download
+          go test -v ./...
+          goreleaser --version
+
+      # Run GoReleaser using devenv
+      - name: Run GoReleaser
+        if: github.event_name == 'push' || inputs.dry_run != true
+        run: |
+          devenv shell -q --impure goreleaser -- release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.tag.outputs.TAG }}
+
+      # Run GoReleaser in dry-run mode using devenv
+      - name: Run GoReleaser (Dry Run)
+        if: inputs.dry_run == true
+        run: |
+          devenv shell -q --impure goreleaser -- release --snapshot --clean --skip=publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.tag.outputs.TAG }}

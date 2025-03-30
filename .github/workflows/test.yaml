@@ -1,0 +1,42 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Install Nix
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+
+      # Run tests using devenv
+      - name: Run tests
+        shell: devenv shell -q bash -- -e {0}
+        run: |
+          devenv test
+          go mod download
+          go test -v ./...
+
+      # Build the application (without releasing)
+      - name: Build
+        shell: devenv shell -q bash -- -e {0}
+        run: |
+          go build -v ./...
