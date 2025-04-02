@@ -25,11 +25,18 @@ func (w *TerminalWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 	fmt.Fprintln(writer, "\n"+headerColor("✨ cmdperf - Command Performance Benchmarking ✨"))
 	fmt.Fprintln(writer, strings.Repeat("━", 50))
 
-	headerLine := fmt.Sprintf("\n  %-12s %-30s %-30s %-15s %-10s\n",
+	// Adjust header based on whether rate limiting is active
+	throughputHeader := "Throughput"
+	if len(stats) > 0 && stats[0] != nil && stats[0].TargetRate > 0 {
+		throughputHeader = "Throughput (target)"
+	}
+
+	headerLine := fmt.Sprintf("\n  %-12s %-30s %-30s %-20s %-20s %-10s\n",
 		"Runs",
 		"Mean ± StdDev",
 		"Range (min … max)",
-		"Throughput",
+		throughputHeader,
+		"Rate (ach/tgt)",
 		"Errors")
 
 	fmt.Fprint(writer, subheaderColor(headerLine))
@@ -52,7 +59,13 @@ func (w *TerminalWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 
 			meanStdDev = fmt.Sprintf("%s ± %s", meanStr, stdDevStr)
 			timeRange = fmt.Sprintf("%s … %s", minStr, maxStr)
-			throughput = FormatThroughput(stat.Throughput)
+
+			// Check if rate limiting is enabled
+			if stat.TargetRate > 0 {
+				throughput = FormatThroughputWithRate(stat.Throughput, stat.TargetRate)
+			} else {
+				throughput = FormatThroughput(stat.Throughput)
+			}
 		}
 
 		errorStr := fmt.Sprintf("%d", stat.ErrorCount)
@@ -60,11 +73,19 @@ func (w *TerminalWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 			errorStr = errorColor(errorStr)
 		}
 
-		line := fmt.Sprintf("  %-12d %-30s %-30s %-15s %-10s\n",
+		rateStr := "-"
+		if stat.TargetRate > 0 {
+			rateStr = fmt.Sprintf("%s/%s",
+				valueColor(fmt.Sprintf("%.2f", stat.Throughput)),
+				comparisonColor(fmt.Sprintf("%.2f", stat.TargetRate)))
+		}
+
+		line := fmt.Sprintf("  %-12d %-30s %-30s %-20s %-20s %-10s\n",
 			stat.TotalRuns,
 			meanStdDev,
 			timeRange,
 			throughput,
+			rateStr,
 			errorStr)
 
 		fmt.Fprint(writer, valueColor(line))

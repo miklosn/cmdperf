@@ -3,8 +3,11 @@ package output
 import (
 	"fmt"
 	"time"
+
+	"github.com/miklosn/cmdperf/internal/benchmark"
 )
 
+// FormatDuration formats a duration in a human-readable form with appropriate units
 func FormatDuration(d time.Duration) string {
 	if d < time.Microsecond {
 		return fmt.Sprintf("%.2f ns", float64(d.Nanoseconds()))
@@ -17,6 +20,7 @@ func FormatDuration(d time.Duration) string {
 	}
 }
 
+// FormatThroughput formats throughput in a human-readable form with appropriate units
 func FormatThroughput(throughput float64) string {
 	if throughput <= 0 {
 		return "-"
@@ -32,4 +36,40 @@ func FormatThroughput(throughput float64) string {
 	} else {
 		return fmt.Sprintf("%.2f /hr", throughput*3600)
 	}
+}
+
+// FormatThroughputWithRate formats throughput and includes rate information if available
+func FormatThroughputWithRate(throughput, targetRate float64) string {
+	// Format the base throughput
+	baseStr := FormatThroughput(throughput)
+
+	// If target rate is set, include only the target rate
+	if targetRate > 0 {
+		return fmt.Sprintf("%s (%.0f)", baseStr, targetRate)
+	}
+
+	return baseStr
+}
+
+// GetThroughputHeader returns the appropriate header text for throughput column
+func GetThroughputHeader(stats []*benchmark.CommandStats) string {
+	if len(stats) > 0 && stats[0] != nil && stats[0].TargetRate > 0 {
+		return "Throughput (target)"
+	}
+	return "Throughput"
+}
+
+// HasNonZeroExitCodes checks if a command has any non-zero exit codes
+func HasNonZeroExitCodes(stat *benchmark.CommandStats) bool {
+	if stat == nil {
+		return false
+	}
+
+	for exitCode, count := range stat.ExitCodes {
+		if exitCode != 0 && count > 0 {
+			return true
+		}
+	}
+
+	return false
 }

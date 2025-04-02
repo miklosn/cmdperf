@@ -317,7 +317,13 @@ func (ui *InlineUI) render() {
 		headerArgs = append(headerArgs, "Range (min … max)")
 	}
 	if throughputWidth > 0 {
-		headerArgs = append(headerArgs, "Throughput")
+		// Change header text when rate limiting is active
+		if len(ui.commands) > 0 && ui.commands[0] != nil &&
+			ui.commands[0].TargetRate > 0 {
+			headerArgs = append(headerArgs, "Throughput (target)")
+		} else {
+			headerArgs = append(headerArgs, "Throughput")
+		}
 	}
 	if errorsWidth > 0 {
 		headerArgs = append(headerArgs, "Errors")
@@ -371,7 +377,12 @@ func (ui *InlineUI) render() {
 			// Create the formatted strings without colors first
 			meanStdDev = fmt.Sprintf("%s ± %s", meanStr, stdDevStr)
 			timeRange = fmt.Sprintf("%s … %s", minStr, maxStr)
-			throughput = formatThroughput(cmd.Throughput)
+			// Check if rate limiting is enabled
+			if cmd.TargetRate > 0 {
+				throughput = formatThroughputWithRate(cmd.Throughput, cmd.TargetRate)
+			} else {
+				throughput = formatThroughput(cmd.Throughput)
+			}
 		}
 
 		// Format error count
