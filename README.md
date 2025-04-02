@@ -62,6 +62,7 @@ Options:
       --list-color-schemes      List available color schemes
   -t, --timeout=<duration>      Timeout for each command execution [default: 1m]
   -d, --duration=<duration>     Total benchmark duration (overrides --runs)
+  -r, --rate=<rate>            Target rate limit (requests per second)
   -s, --shell=<shell>           Shell to use for command execution [default: /bin/sh]
       --shell-opt=<opt>         Shell option (can be repeated) [default: -c]
   -N, --no-shell                Execute commands directly without a shell
@@ -138,6 +139,13 @@ You can export benchmark results to a CSV file for further analysis:
 cmdperf --csv=results.csv "sleep 0.1" "sleep 0.2"
 ```
 
+The CSV output includes detailed metrics for each command:
+- Command string
+- Total runs and successful runs
+- Error counts and non-zero exit codes
+- Timing statistics (min, max, mean, median, standard deviation)
+- Throughput and target rate (if rate limiting was used)
+
 ## Markdown Output
 
 You can export benchmark results to a Markdown file for documentation or sharing:
@@ -145,6 +153,22 @@ You can export benchmark results to a Markdown file for documentation or sharing
 ```bash
 cmdperf --markdown=results.md "sleep 0.1" "sleep 0.2"
 ```
+
+## Rate Limiting
+
+You can limit the rate at which commands are executed using the `--rate` option:
+
+```bash
+# Limit execution to 10 requests per second
+cmdperf --rate=10 "redis-cli GET mykey"
+```
+
+This is useful for:
+- Simulating specific load patterns
+- Preventing overloading of the target system
+- Testing how services perform under controlled request rates
+
+The actual achieved rate will be reported in the results, allowing you to compare the target rate with what was actually achieved.
 
 ## License
 

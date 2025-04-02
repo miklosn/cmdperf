@@ -36,6 +36,9 @@ type Options struct {
 
 	// Total benchmark duration (overrides Iterations if set)
 	Duration time.Duration
+
+	// Rate limiting option (requests per second per worker)
+	Rate float64
 }
 
 // CommandStats holds statistics for a single command
@@ -65,6 +68,9 @@ type CommandStats struct {
 
 	// Throughput in operations per second
 	Throughput float64
+
+	// Target rate from options
+	TargetRate float64
 
 	// Timestamps for throughput calculation
 	FirstStartTime time.Time

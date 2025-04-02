@@ -47,6 +47,7 @@ var cli struct {
 	MemProfile       string        `name:"mem-profile" help:"Write memory profile to file"`
 	BlockProfile     string        `name:"block-profile" help:"Write goroutine blocking profile to file"`
 	PprofServer      bool          `name:"pprof-server" help:"Start pprof HTTP server on :6060"`
+	Rate             float64       `short:"r" name:"rate" help:"Maximum rate of requests per second per worker (0 = unlimited)"`
 }
 
 func splitCommandRespectingQuotes(cmd string) []string {
@@ -163,6 +164,7 @@ func main() {
 		Parallelism: cli.Concurrency,
 		Timeout:     cli.Timeout,
 		Duration:    cli.Duration,
+		Rate:        cli.Rate,
 	}
 
 	runner, err := benchmark.NewRunner(commands, options)

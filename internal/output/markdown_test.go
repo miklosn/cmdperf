@@ -23,7 +23,7 @@ func TestMarkdownWriter(t *testing.T) {
 		"# ✨ cmdperf - Command Performance Benchmarking ✨",
 		"## Benchmark Parameters",
 		"## Summary",
-		"| Command | Runs | Mean ± StdDev | Min | Max | Throughput | Errors |",
+		"| Command | Runs | Mean ± StdDev | Min | Max | Throughput | Rate | Errors |",
 		"## Command Parameters",
 		"## Comparison",
 	}
