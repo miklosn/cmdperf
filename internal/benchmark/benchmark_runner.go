@@ -18,6 +18,11 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 		return
 	}
 
+	// Set the target rate in the stats
+	runner.statsMutex.Lock()
+	runner.Results[index].TargetRate = runner.Options.Rate
+	runner.statsMutex.Unlock()
+
 	workerCtx, workerCancel := context.WithCancel(ctx)
 	defer workerCancel()
 
@@ -73,10 +78,28 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 		go func(workerID int) {
 			defer workerWg.Done()
 
+			// Create a ticker for rate limiting if needed
+			var ticker *time.Ticker
+			if runner.Options.Rate > 0 {
+				interval := time.Duration(float64(time.Second) / runner.Options.Rate)
+				ticker = time.NewTicker(interval)
+				defer ticker.Stop()
+			}
+
 			// Process work items assigned to this worker
 			for range workCh {
 				if contextCanceled(workerCtx) {
 					return
+				}
+
+				// Apply rate limiting if configured
+				if ticker != nil {
+					select {
+					case <-ticker.C:
+						// Time to process next request
+					case <-workerCtx.Done():
+						return
+					}
 				}
 
 				select {

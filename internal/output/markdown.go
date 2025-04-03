@@ -28,12 +28,16 @@ func (w *MarkdownWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 		fmt.Fprintf(bufWriter, "- **Parallelism**: %d\n", cmd.Parallelism)
 		fmt.Fprintf(bufWriter, "- **Timeout**: %s\n", cmd.Timeout)
 		fmt.Fprintf(bufWriter, "- **Shell**: %s\n", cmd.Shell)
-		fmt.Fprintf(bufWriter, "- **Shell Options**: %s\n\n", strings.Join(cmd.ShellOptions, " "))
+		fmt.Fprintf(bufWriter, "- **Shell Options**: %s\n", strings.Join(cmd.ShellOptions, " "))
+		if stats[0].TargetRate > 0 {
+			fmt.Fprintf(bufWriter, "- **Target Rate**: %.2f req/sec\n", stats[0].TargetRate)
+		}
+		fmt.Fprintln(bufWriter)
 	}
 
 	fmt.Fprintf(bufWriter, "## Summary\n\n")
-	fmt.Fprintf(bufWriter, "| Command | Runs | Mean ± StdDev | Min | Max | Throughput | Errors |\n")
-	fmt.Fprintf(bufWriter, "|---------|------|--------------|-----|-----|------------|-------|\n")
+	fmt.Fprintf(bufWriter, "| Command | Runs | Mean ± StdDev | Min | Max | Throughput | Rate | Errors |\n")
+	fmt.Fprintf(bufWriter, "|---------|------|--------------|-----|-----|------------|------|-------|\n")
 
 	for _, stat := range stats {
 		meanStr := FormatDuration(stat.Mean)
@@ -44,7 +48,12 @@ func (w *MarkdownWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 
 		escapedCmd := strings.ReplaceAll(stat.Command.Raw, "|", "\\|")
 
-		fmt.Fprintf(bufWriter, "| `%s` | %d | %s ± %s | %s | %s | %s | %d |\n",
+		rateStr := "-"
+		if stat.TargetRate > 0 {
+			rateStr = fmt.Sprintf("%.2f/%.2f", stat.Throughput, stat.TargetRate)
+		}
+
+		fmt.Fprintf(bufWriter, "| `%s` | %d | %s ± %s | %s | %s | %s | %s | %d |\n",
 			escapedCmd,
 			stat.TotalRuns,
 			meanStr,
@@ -52,6 +61,7 @@ func (w *MarkdownWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 			minStr,
 			maxStr,
 			throughputStr,
+			rateStr,
 			stat.ErrorCount)
 	}
 

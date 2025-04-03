@@ -26,6 +26,7 @@ func (w *CSVWriter) Write(writer io.Writer, stats []*benchmark.CommandStats) err
 		"Median (ns)",
 		"StdDev (ns)",
 		"Throughput (/s)",
+		"TargetRate (/s)",
 	}
 	if err := csvWriter.Write(header); err != nil {
 		return fmt.Errorf("failed to write CSV header: %w", err)
@@ -51,6 +52,7 @@ func (w *CSVWriter) Write(writer io.Writer, stats []*benchmark.CommandStats) err
 			fmt.Sprintf("%d", stat.Median.Nanoseconds()),
 			fmt.Sprintf("%d", stat.StdDev.Nanoseconds()),
 			fmt.Sprintf("%f", stat.Throughput),
+			fmt.Sprintf("%f", stat.TargetRate),
 		}
 		if err := csvWriter.Write(row); err != nil {
 			return fmt.Errorf("failed to write CSV row for command '%s': %w", stat.Command.Raw, err)
