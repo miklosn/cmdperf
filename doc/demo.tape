@@ -17,5 +17,9 @@ Type 'cmdperf -r 1 "curl -s google.com" "curl -s bing.com"' Sleep 200ms
 Enter
 Sleep 12s
 
+Type 'cmdperf -r 1 "curl -s google.com" "curl -s bing.com"' Sleep 200ms
+Enter
+Sleep 12s
+
 # End of demo
 Sleep 2s
