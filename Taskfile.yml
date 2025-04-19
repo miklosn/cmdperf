@@ -24,6 +24,16 @@ tasks:
 
         echo "✨ Color scheme showcase complete! ✨"
 
+  demo:
+    desc: "Generate demo GIF using vhs"
+    cmds:
+      # Run VHS
+      - vhs doc/demo.tape -o doc/demo.gif
+    sources:
+      - doc/demo.tape
+    generates:
+      - doc/demo.gif
+
   showcase-colors-auto:
     desc: Showcase all available color schemes (automatic, no pauses)
     cmds:
