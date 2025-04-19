@@ -1,6 +1,6 @@
-# ✨ cmdperf - Command Performance Benchmarking ✨
+# ✨ cmdperf - Interactive Command Performance Benchmarking ✨
 
-A command-line benchmarking tool that allows you to measure and compare the performance of shell commands.
+`cmdperf` is a terminal tool designed for developers who need to quickly **measure, compare, and understand the performance characteristics of shell commands**. Whether you're evaluating different implementations of a task (e.g., `grep` vs `rg`), checking the impact of command-line flags, or getting a feel for command latency under specific conditions (like concurrency or rate limits), `cmdperf` provides interactive feedback and clear, comparable results right in your terminal.
 
 ![cmdperf demo](doc/demo.gif)
 
@@ -18,10 +18,71 @@ A command-line benchmarking tool that allows you to measure and compare the perf
 - Precise analysis. We're deliberately spawning shells and such. cmdperf is a tool for quick and dirty benchmarking, not a scientific tool.
 - Not a replacement for specialized benchmarking tools.
 
+## Why Choose `cmdperf`?
+
+While various tools exist, `cmdperf` offers a unique blend of features particularly useful for developers during analysis and comparison:
+
+*   **Interactive Real-time UI:** Unlike tools that only output results at the end, `cmdperf` provides a live-updating terminal interface showing progress, statistics (mean, min/max, stddev), and ETA. This visual feedback helps you understand performance *during* execution.
+*   **Direct Command Comparison:** Easily benchmark multiple commands head-to-head in a single invocation, with results clearly presented for comparison.
+*   **Concurrency Testing:** Run multiple instances of a command concurrently (`-c` flag) to understand performance under parallel load.
+*   **Rate Limiting:** Simulate specific throughput scenarios (`--rate` flag) to test how commands or the systems they interact with perform under controlled request rates.
+*   **Shell Flexibility:** Run commands via a specified shell (handling pipes, redirection, etc.) or execute them directly (`-N` flag) for simpler cases, avoiding shell overhead.
+*   **Multiple Output Formats:** Besides the TUI, results can be easily exported to Markdown (`--markdown`) or CSV (`--csv`) for documentation or further analysis.
+*   **Designed for Quick Insights:** While acknowledging it's not for rigorous scientific benchmarking (see Non-Goals), it's optimized for developers needing fast, actionable performance feedback.
+
+`cmdperf` is ideal when you need more than basic timing but want an easier, more interactive experience than complex profiling suites, especially when comparing command variations or simulating specific load conditions.
+
 ## Installation
+
+There are several ways to install `cmdperf`:
+
+### Using `go install`
+
+If you have a Go development environment set up, you can install the latest development version directly using `go install`:
 
 ```bash
 go install github.com/miklosn/cmdperf/cmd/cmdperf@latest
+```
+
+Ensure your `GOPATH/bin` or `GOBIN` directory is included in your system's `PATH`.
+
+### Using Pre-built Binaries
+
+Pre-compiled binaries are available for Linux, macOS, and Windows on the [GitHub Releases page](https://github.com/miklosn/cmdperf/releases).
+
+1.  Download the appropriate archive for your operating system and architecture (e.g., `cmdperf_Linux_x86_64`, `cmdperf_Darwin_arm64`, `cmdperf_Windows_x86_64.exe`).
+2.  Extract the binary from the archive (if necessary).
+3.  (Linux/macOS) Make the binary executable: `chmod +x cmdperf_*`
+4.  Move the binary to a directory included in your system's `PATH`. Common locations include `/usr/local/bin` or `~/bin` on Linux/macOS. For Windows, you can place it in a directory and add that directory to your `PATH` environment variable.
+
+### Using Package Managers (Linux)
+
+`.deb` and `.rpm` packages are also provided on the [GitHub Releases page](https://github.com/miklosn/cmdperf/releases) for easier installation on compatible Linux distributions.
+
+**Debian/Ubuntu:**
+
+Download the `.deb` package and install it using `dpkg`:
+
+```bash
+sudo dpkg -i cmdperf_*.deb
+```
+
+If you encounter dependency issues, run:
+
+```bash
+sudo apt --fix-broken install
+```
+
+**Fedora/CentOS/RHEL:**
+
+Download the `.rpm` package and install it using `rpm` or `dnf`:
+
+```bash
+# Using rpm
+sudo rpm -i cmdperf_*.rpm
+
+# Or using dnf
+sudo dnf install cmdperf_*.rpm
 ```
 
 ## Usage
@@ -37,7 +98,7 @@ For example:
 cmdperf "sleep 0.1"
 
 # Multiple commands to compare
-cmdperf "sleep 0.1" "sleep 0.2"
+cmdperf "grep 'ERROR' mock.log" "rg 'ERROR' mock.log"
 
 # Parallel execution with 10 concurrent processes
 cmdperf -c 10 "curl -s https://example.com > /dev/null"
@@ -47,6 +108,12 @@ cmdperf -n 100 "redis-cli PING"
 
 # Run benchmark for 30 seconds
 cmdperf -d 30s "redis-cli PING"
+
+# Output results to a Markdown file
+cmdperf --markdown results.md "sleep 0.1" "sleep 0.2"
+
+# Output results to a CSV file
+cmdperf --csv results.csv "sleep 0.1" "sleep 0.2"
 ```
 
 ## CLI Options
@@ -169,6 +236,14 @@ This is useful for:
 - Testing how services perform under controlled request rates
 
 The actual achieved rate will be reported in the results, allowing you to compare the target rate with what was actually achieved.
+
+## Community & Support
+
+Found `cmdperf` useful? Here's how you can get involved or get help:
+
+*   **⭐ Star the Project:** Show your support by starring the [cmdperf repository](https://github.com/miklosn/cmdperf) on GitHub!
+*   **🐞 Report Issues:** Encounter a bug or have a suggestion? Please open an issue on the [GitHub Issues page](https://github.com/miklosn/cmdperf/issues).
+*   **🤝 Contribute:** We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report bugs, or suggest features.
 
 ## License
 
