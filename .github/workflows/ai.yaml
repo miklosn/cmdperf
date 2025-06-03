@@ -1,0 +1,39 @@
+name: AI PR Agent
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+
+jobs:
+  ai-pr:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@ai')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@ai')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@ai'))
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: "google-github-actions/auth@v2"
+        with:
+          project_id: "cr-prod-iac-core-0"
+          workload_identity_provider: "projects/292735720060/locations/global/workloadIdentityPools/cr-bootstrap/providers/cr-bootstrap-github-1"
+          service_account: "clamav-eval-1@cr-prod-iac-core-0.iam.gserviceaccount.com"
+
+      - uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          use_vertex: true
+          trigger_phrase: "@ai"
+        env:
+          ANTHROPIC_VERTEX_PROJECT_ID: "clamav-eval-cray"
+          CLOUD_ML_REGION: "us-east5"
