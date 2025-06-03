@@ -95,7 +95,17 @@ func main() {
 	)
 
 	if cli.Version {
-		fmt.Printf("cmdperf version %s (built %s)\n", version, buildTime)
+		scheme, err := colorscheme.GetScheme(cli.ColorScheme)
+		if err != nil {
+			scheme = colorscheme.Default()
+		}
+		
+		fmt.Printf("%s %s %s (%s %s)\n",
+			scheme.Command("cmdperf"),
+			scheme.Label("version"),
+			scheme.Value(version),
+			scheme.Label("built"),
+			scheme.Value(buildTime))
 		os.Exit(0)
 	}
 
