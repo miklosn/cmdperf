@@ -22,13 +22,13 @@
 
 While various tools exist, `cmdperf` offers a unique blend of features particularly useful for developers during analysis and comparison:
 
-*   **Interactive Real-time UI:** Unlike tools that only output results at the end, `cmdperf` provides a live-updating terminal interface showing progress, statistics (mean, min/max, stddev), and ETA. This visual feedback helps you understand performance *during* execution.
-*   **Direct Command Comparison:** Easily benchmark multiple commands head-to-head in a single invocation, with results clearly presented for comparison.
-*   **Concurrency Testing:** Run multiple instances of a command concurrently (`-c` flag) to understand performance under parallel load.
-*   **Rate Limiting:** Simulate specific throughput scenarios (`--rate` flag) to test how commands or the systems they interact with perform under controlled request rates.
-*   **Shell Flexibility:** Run commands via a specified shell (handling pipes, redirection, etc.) or execute them directly (`-N` flag) for simpler cases, avoiding shell overhead.
-*   **Multiple Output Formats:** Besides the TUI, results can be easily exported to Markdown (`--markdown`) or CSV (`--csv`) for documentation or further analysis.
-*   **Designed for Quick Insights:** While acknowledging it's not for rigorous scientific benchmarking (see Non-Goals), it's optimized for developers needing fast, actionable performance feedback.
+- **Interactive Real-time UI:** Unlike tools that only output results at the end, `cmdperf` provides a live-updating terminal interface showing progress, statistics (mean, min/max, stddev), and ETA. This visual feedback helps you understand performance *during* execution.
+- **Direct Command Comparison:** Easily benchmark multiple commands head-to-head in a single invocation, with results clearly presented for comparison.
+- **Concurrency Testing:** Run multiple instances of a command concurrently (`-c` flag) to understand performance under parallel load.
+- **Rate Limiting:** Simulate specific throughput scenarios (`--rate` flag) to test how commands or the systems they interact with perform under controlled request rates.
+- **Shell Flexibility:** Run commands via a specified shell (handling pipes, redirection, etc.) or execute them directly (`-N` flag) for simpler cases, avoiding shell overhead.
+- **Multiple Output Formats:** Besides the TUI, results can be easily exported to Markdown (`--markdown`) or CSV (`--csv`) for documentation or further analysis.
+- **Designed for Quick Insights:** While acknowledging it's not for rigorous scientific benchmarking (see Non-Goals), it's optimized for developers needing fast, actionable performance feedback.
 
 `cmdperf` is ideal when you need more than basic timing but want an easier, more interactive experience than complex profiling suites, especially when comparing command variations or simulating specific load conditions.
 
@@ -51,17 +51,17 @@ Ensure your `GOPATH/bin` or `GOBIN` directory is included in your system's `PATH
 On macOS or Linux, you can install `cmdperf` using Homebrew:
 
 ```bash
-brew install miklosn/cmdperf/cmdperf
+brew install miklosn/tap/cmdperf
 ```
 
 ### Using Pre-built Binaries
 
 Pre-compiled binaries are available for Linux, macOS, and Windows on the [GitHub Releases page](https://github.com/miklosn/cmdperf/releases).
 
-1.  Download the appropriate archive for your operating system and architecture (e.g., `cmdperf_Linux_x86_64`, `cmdperf_Darwin_arm64`, `cmdperf_Windows_x86_64.exe`).
-2.  Extract the binary from the archive (if necessary).
-3.  (Linux/macOS) Make the binary executable: `chmod +x cmdperf_*`
-4.  Move the binary to a directory included in your system's `PATH`. Common locations include `/usr/local/bin` or `~/bin` on Linux/macOS. For Windows, you can place it in a directory and add that directory to your `PATH` environment variable.
+1. Download the appropriate archive for your operating system and architecture (e.g., `cmdperf_Linux_x86_64`, `cmdperf_Darwin_arm64`, `cmdperf_Windows_x86_64.exe`).
+2. Extract the binary from the archive (if necessary).
+3. (Linux/macOS) Make the binary executable: `chmod +x cmdperf_*`
+4. Move the binary to a directory included in your system's `PATH`. Common locations include `/usr/local/bin` or `~/bin` on Linux/macOS. For Windows, you can place it in a directory and add that directory to your `PATH` environment variable.
 
 ### Using Package Managers (Linux)
 
@@ -215,6 +215,7 @@ cmdperf --csv=results.csv "sleep 0.1" "sleep 0.2"
 ```
 
 The CSV output includes detailed metrics for each command:
+
 - Command string
 - Total runs and successful runs
 - Error counts and non-zero exit codes
@@ -239,6 +240,7 @@ cmdperf --rate=10 "redis-cli GET mykey"
 ```
 
 This is useful for:
+
 - Simulating specific load patterns
 - Preventing overloading of the target system
 - Testing how services perform under controlled request rates
@@ -249,9 +251,9 @@ The actual achieved rate will be reported in the results, allowing you to compar
 
 Found `cmdperf` useful? Here's how you can get involved or get help:
 
-*   **⭐ Star the Project:** Show your support by starring the [cmdperf repository](https://github.com/miklosn/cmdperf) on GitHub!
-*   **🐞 Report Issues:** Encounter a bug or have a suggestion? Please open an issue on the [GitHub Issues page](https://github.com/miklosn/cmdperf/issues).
-*   **🤝 Contribute:** We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report bugs, or suggest features.
+- **⭐ Star the Project:** Show your support by starring the [cmdperf repository](https://github.com/miklosn/cmdperf) on GitHub!
+- **🐞 Report Issues:** Encounter a bug or have a suggestion? Please open an issue on the [GitHub Issues page](https://github.com/miklosn/cmdperf/issues).
+- **🤝 Contribute:** We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report bugs, or suggest features.
 
 ## License
 

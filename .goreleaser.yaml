@@ -17,10 +17,18 @@ builds:
 homebrew_casks:
   - repository:
       owner: miklosn
-      name: homebrew-cmdperf
+      name: homebrew-tap
     homepage: https://github.com/miklosn/cmdperf
     description: Command Performance Benchmarking
     license: MIT
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            Dir.glob("#{staged_path}/cmdperf_*").each do |file|
+              system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", file]
+            end
+          end
 
 archives:
   - formats: [binary]
