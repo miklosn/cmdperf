@@ -14,6 +14,13 @@ builds:
       - freebsd
       - windows
       - darwin
+homebrew_casks:
+  - repository:
+      owner: miklosn
+      name: homebrew-cmdperf
+    homepage: https://github.com/miklosn/cmdperf
+    description: Command Performance Benchmarking
+    license: MIT
 
 archives:
   - formats: [binary]
