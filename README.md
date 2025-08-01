@@ -46,6 +46,14 @@ go install github.com/miklosn/cmdperf/cmd/cmdperf@latest
 
 Ensure your `GOPATH/bin` or `GOBIN` directory is included in your system's `PATH`.
 
+### Using Homebrew (macOS/Linux)
+
+On macOS or Linux, you can install `cmdperf` using Homebrew:
+
+```bash
+brew install miklosn/cmdperf/cmdperf
+```
+
 ### Using Pre-built Binaries
 
 Pre-compiled binaries are available for Linux, macOS, and Windows on the [GitHub Releases page](https://github.com/miklosn/cmdperf/releases).
