@@ -22,6 +22,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    environment:
+      name: Release
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -78,7 +80,7 @@ jobs:
         run: |
           devenv shell -q --impure goreleaser -- release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ steps.tag.outputs.TAG }}
 
       # Run GoReleaser in dry-run mode using devenv
@@ -87,5 +89,5 @@ jobs:
         run: |
           devenv shell -q --impure goreleaser -- release --snapshot --clean --skip=publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ steps.tag.outputs.TAG }}
