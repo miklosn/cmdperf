@@ -2,7 +2,6 @@ package benchmark
 
 import (
 	"context"
-	"math"
 	"sync"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 
 func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Command) {
 	defer runner.wg.Done()
+	startTime := time.Now()
 
 	runner.emitCommandStarted(index, cmd)
 
@@ -30,10 +30,10 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 	var workCh chan int
 	var totalIterations int
 
-	if runner.Options.Duration > 0 {
+	if runner.Mode == ModeDuration {
 		// For duration-based benchmarking, use a buffered channel with a large capacity
 		workCh = make(chan int, 1000)
-		totalIterations = math.MaxInt32 // Use a very large number for progress calculation
+		totalIterations = 0 // Not relevant for duration mode
 
 		// Start a goroutine to feed the work channel until context is cancelled
 		go func() {
@@ -144,7 +144,7 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 				// Report progress periodically even if no results yet
 				if runner.progressCallback != nil {
 					// Pass the current command index and total iterations to show progress
-					runner.emitCommandProgress(index, cmd, nil, completedIterations, totalIterations)
+					runner.emitCommandProgress(index, cmd, nil, completedIterations, totalIterations, time.Since(startTime))
 					runner.progressCallback(runner.Results, false)
 				}
 			case <-workerCtx.Done():
@@ -170,7 +170,7 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 		completedIterations++
 
 		shouldProcessBatch := len(resultBatch) >= batchSize ||
-			completedIterations == totalIterations ||
+			(runner.Mode == ModeIterations && completedIterations == totalIterations) ||
 			contextCanceled(ctx)
 		if completedIterations <= 5 || time.Since(lastProgressTime) >= 100*time.Millisecond {
 			shouldProcessBatch = true
@@ -189,7 +189,7 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 		now := time.Now()
 		shouldUpdate := now.Sub(lastEventTime) >= MinUpdateInterval
 		if shouldUpdate || result.Error != nil || result.Duration > time.Second {
-			runner.emitCommandProgress(index, cmd, result, completedIterations, totalIterations)
+			runner.emitCommandProgress(index, cmd, result, completedIterations, totalIterations, time.Since(startTime))
 			lastEventTime = now
 		}
 

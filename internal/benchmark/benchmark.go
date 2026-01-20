@@ -41,6 +41,16 @@ type Options struct {
 	Rate float64
 }
 
+// BenchmarkMode represents the mode of benchmarking
+type BenchmarkMode int
+
+const (
+	// ModeIterations runs the benchmark for a fixed number of iterations
+	ModeIterations BenchmarkMode = iota
+	// ModeDuration runs the benchmark for a fixed duration
+	ModeDuration
+)
+
 // CommandStats holds statistics for a single command
 type CommandStats struct {
 	// Command that was benchmarked
@@ -82,6 +92,7 @@ type Runner struct {
 	Options  Options
 	Commands []*command.Command
 	Results  []*CommandStats
+	Mode     BenchmarkMode
 
 	wg               sync.WaitGroup
 	statsMutex       sync.Mutex
@@ -95,17 +106,23 @@ func NewRunner(commands []*command.Command, options Options) (*Runner, error) {
 	if len(commands) == 0 {
 		return nil, errors.New("benchmark: at least one command is required")
 	}
-	if options.Iterations <= 0 {
-		return nil, errors.New("benchmark: iterations must be positive")
+	if options.Iterations <= 0 && options.Duration <= 0 {
+		return nil, errors.New("benchmark: iterations or duration must be positive")
 	}
 	if options.Parallelism <= 0 {
 		return nil, errors.New("benchmark: parallelism must be positive")
+	}
+
+	mode := ModeIterations
+	if options.Duration > 0 {
+		mode = ModeDuration
 	}
 
 	return &Runner{
 		Options:  options,
 		Commands: commands,
 		Results:  make([]*CommandStats, len(commands)),
+		Mode:     mode,
 	}, nil
 }
 
@@ -237,12 +254,26 @@ func (runner *Runner) emitCommandStarted(index int, cmd *command.Command) {
 }
 
 // emitCommandProgress emits a command progress event
-func (runner *Runner) emitCommandProgress(index int, cmd *command.Command, result *command.Result, completed, total int) {
+func (runner *Runner) emitCommandProgress(index int, cmd *command.Command, result *command.Result, completed, total int, elapsed time.Duration) {
 	if runner.eventHandler == nil {
 		return
 	}
 
-	progress := float64(completed) / float64(total)
+	var progress float64
+	if runner.Mode == ModeDuration {
+		if runner.Options.Duration > 0 {
+			progress = float64(elapsed) / float64(runner.Options.Duration)
+			// Cap progress at 1.0
+			if progress > 1.0 {
+				progress = 1.0
+			}
+		}
+	} else {
+		if total > 0 {
+			progress = float64(completed) / float64(total)
+		}
+	}
+
 	runner.statsMutex.Lock()
 	statsCopy := *runner.Results[index]
 	runner.statsMutex.Unlock()
@@ -256,6 +287,12 @@ func (runner *Runner) emitCommandProgress(index int, cmd *command.Command, resul
 		"progress":      progress,
 		"completed":     completed,
 		"total":         total,
+		"elapsed":       elapsed,
+		"mode":          runner.Mode,
+	}
+
+	if runner.Mode == ModeDuration {
+		eventData["duration"] = runner.Options.Duration
 	}
 
 	// Only include result if not nil
@@ -317,9 +354,17 @@ func (runner *Runner) processBatch(cmdIndex int, resultBatch []*command.Result) 
 func addResultToRecentResults(stats *CommandStats, result *command.Result) {
 	// If we've reached the limit, make room by removing oldest result
 	if len(stats.RecentResults) >= MaxRecentResults {
+		// Get the result that is about to be removed
+		oldestResult := stats.RecentResults[0]
+
 		// Shift elements to remove the oldest (index 0)
 		copy(stats.RecentResults, stats.RecentResults[1:])
 		stats.RecentResults = stats.RecentResults[:MaxRecentResults-1]
+
+		// Release the result back to the pool
+		if oldestResult != nil {
+			command.ReleaseResult(oldestResult)
+		}
 	}
 
 	// Add the new result
