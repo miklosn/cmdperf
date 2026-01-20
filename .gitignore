@@ -11,5 +11,18 @@ devenv.local.nix
 
 dist/
 
-cmdperf
-main
+# Binaries
+/cmdperf
+/main
+
+# Go
+vendor/
+*.test
+*.out
+*.prof
+cpu.prof
+mem.prof
+block.prof
+
+# Documentation
+TASKS.md
