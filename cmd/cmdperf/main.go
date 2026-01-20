@@ -227,12 +227,14 @@ func main() {
 		file, err := os.Create(cli.CSVOutput)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating CSV file at %s: %v\n", absPath, err)
+			os.Exit(1)
 		} else {
 			defer file.Close()
 
 			csvWriter, _ := output.GetWriter("csv")
 			if err := csvWriter.Write(file, runner.Results); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing CSV results to %s: %v\n", absPath, err)
+				os.Exit(1)
 			} else {
 				fmt.Printf("CSV results written to %s\n", absPath)
 			}
@@ -245,12 +247,14 @@ func main() {
 		file, err := os.Create(cli.MarkdownOutput)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating Markdown file at %s: %v\n", absPath, err)
+			os.Exit(1)
 		} else {
 			defer file.Close()
 
 			mdWriter, _ := output.GetWriter("markdown")
 			if err := mdWriter.Write(file, runner.Results); err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing Markdown results to %s: %v\n", absPath, err)
+				os.Exit(1)
 			} else {
 				fmt.Printf("Markdown results written to %s\n", absPath)
 			}
