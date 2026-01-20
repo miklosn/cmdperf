@@ -210,6 +210,17 @@ func main() {
 
 	runner.Run(runCtx)
 
+	// Release any remaining results back to the pool
+	for _, stats := range runner.Results {
+		for _, result := range stats.RecentResults {
+			if result != nil {
+				command.ReleaseResult(result)
+			}
+		}
+		// Clear the slice to remove references
+		stats.RecentResults = nil
+	}
+
 	if cli.CSVOutput != "" {
 		absPath, _ := filepath.Abs(cli.CSVOutput)
 
