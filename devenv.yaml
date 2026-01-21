@@ -4,6 +4,8 @@ inputs:
     url: github:cachix/devenv-nixpkgs/rolling
   nixpkgs-unstable:
     url: github:nixos/nixpkgs/nixpkgs-unstable
+  devenv:
+    url: github:cachix/devenv/v1.11.2
 
 allowUnfree: true
 # If you're willing to use a package that's vulnerable

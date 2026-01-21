@@ -19,6 +19,12 @@ in
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";
 
+  # Configure process-compose with minimal config
+  process.managers.process-compose.configFile = pkgs.writeText "process-compose.yaml" ''
+    version: "0.5"
+    processes: {}
+  '';
+
   # https://devenv.sh/services/
   # services.postgres.enable = true;
 
@@ -45,7 +51,7 @@ in
   '';
 
   # https://devenv.sh/pre-commit-hooks/
-  # pre-commit.hooks.shellcheck.enable = true;
+  # git-hooks.hooks.shellcheck.enable = true;
   #
   git-hooks.hooks = {
     gofmt = {
