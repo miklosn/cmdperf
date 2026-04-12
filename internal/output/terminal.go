@@ -90,6 +90,13 @@ func (w *TerminalWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 
 		fmt.Fprint(writer, valueColor(line))
 
+		if stat.SuccessfulRuns > 0 {
+			fmt.Fprintf(writer, "  %s %s  %s %s  %s %s\n",
+				labelColor("P50:"), valueColor(FormatDuration(stat.P50)),
+				labelColor("P95:"), valueColor(FormatDuration(stat.P95)),
+				labelColor("P99:"), valueColor(FormatDuration(stat.P99)))
+		}
+
 		hasNonZeroExitCodes := false
 		for exitCode, count := range stat.ExitCodes {
 			if exitCode != 0 && count > 0 {

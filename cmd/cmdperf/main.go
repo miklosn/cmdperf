@@ -41,6 +41,7 @@ var cli struct {
 	NoShell          bool          `short:"N" name:"no-shell" help:"Execute commands directly without a shell"`
 	CSVOutput        string        `name:"csv" help:"Write results to CSV file"`
 	MarkdownOutput   string        `name:"markdown" help:"Write results to Markdown file"`
+	JSONOutput       string        `name:"json" help:"Write results to JSON file"`
 	Version          bool          `name:"version" help:"Show version information"`
 	FailOnError      bool          `name:"fail-on-error" help:"Exit with non-zero status if any command returns non-zero exit code"`
 	CPUProfile       string        `name:"cpu-profile" help:"Write CPU profile to file"`
@@ -257,6 +258,26 @@ func main() {
 				os.Exit(1)
 			} else {
 				fmt.Printf("Markdown results written to %s\n", absPath)
+			}
+		}
+	}
+
+	if cli.JSONOutput != "" {
+		absPath, _ := filepath.Abs(cli.JSONOutput)
+
+		file, err := os.Create(cli.JSONOutput)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating JSON file at %s: %v\n", absPath, err)
+			os.Exit(1)
+		} else {
+			defer file.Close()
+
+			jsonWriter, _ := output.GetWriter("json")
+			if err := jsonWriter.Write(file, runner.Results); err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing JSON results to %s: %v\n", absPath, err)
+				os.Exit(1)
+			} else {
+				fmt.Printf("JSON results written to %s\n", absPath)
 			}
 		}
 	}
