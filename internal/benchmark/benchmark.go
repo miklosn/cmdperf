@@ -5,6 +5,8 @@ import (
 	"errors"
 	"math"
 	"math/rand"
+	"runtime"
+	"runtime/debug"
 	"sort"
 	"sync"
 	"time"
@@ -143,6 +145,10 @@ func contextCanceled(ctx context.Context) bool {
 
 // Run executes the benchmark for all commands
 func (runner *Runner) Run(ctx context.Context) {
+	prev := debug.SetGCPercent(-1)
+	runtime.GC()
+	defer debug.SetGCPercent(prev)
+
 	// Initialize results with pre-allocated capacity
 	for i := range runner.Commands {
 		runner.Results[i] = &CommandStats{
