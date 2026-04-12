@@ -7,6 +7,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
@@ -39,6 +40,7 @@ var cli struct {
 	Shell            string        `short:"s" name:"shell" help:"Shell to use for command execution" default:"/bin/sh"`
 	ShellOptions     []string      `name:"shell-opt" help:"Shell option (can be repeated)" default:"-c"`
 	NoShell          bool          `short:"N" name:"no-shell" help:"Execute commands directly without a shell"`
+	ForceShell       bool          `name:"force-shell" help:"Force shell execution even when metacharacters are absent"`
 	CSVOutput        string        `name:"csv" help:"Write results to CSV file"`
 	MarkdownOutput   string        `name:"markdown" help:"Write results to Markdown file"`
 	Version          bool          `name:"version" help:"Show version information"`
@@ -79,6 +81,19 @@ func splitCommandRespectingQuotes(cmd string) []string {
 	}
 
 	return parts
+}
+
+// needsShell returns true if cmd contains any characters that require shell interpretation.
+func needsShell(cmd string) bool {
+	// Metacharacters that make a command shell-dependent.
+	// Globs, redirects, pipes, substitution, background, expansion, quoting handled separately.
+	for _, r := range cmd {
+		switch r {
+		case '|', '&', ';', '<', '>', '$', '`', '\\', '(', ')', '*', '?', '#', '~', '[', ']', '{', '}', '!':
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
@@ -132,22 +147,33 @@ func main() {
 
 	commands := make([]*command.Command, len(cli.Commands))
 	for i, cmdStr := range cli.Commands {
-		if cli.NoShell {
-			parts := splitCommandRespectingQuotes(cmdStr)
-			if len(parts) == 0 {
+		useDirect := cli.NoShell || (!cli.ForceShell && !needsShell(cmdStr))
+		var directParts []string
+		if useDirect {
+			directParts = splitCommandRespectingQuotes(cmdStr)
+			if len(directParts) == 0 {
 				fmt.Fprintf(os.Stderr, "Error: empty command\n")
 				os.Exit(1)
 			}
+			// Resolve the absolute path once here so that each Run() avoids
+			// a $PATH scan via exec.LookPath. If the binary is not found,
+			// fall through to shell mode and let the shell report the error.
+			if resolved, err := exec.LookPath(directParts[0]); err != nil {
+				useDirect = false
+			} else {
+				directParts[0] = resolved
+			}
+		}
 
+		if useDirect {
 			commands[i] = &command.Command{
 				Raw:         cmdStr,
 				DirectExec:  true,
-				Command:     parts[0],
-				Args:        parts[1:],
+				Command:     directParts[0],
+				Args:        directParts[1:],
 				Timeout:     cli.Timeout,
 				Parallelism: cli.Concurrency,
 			}
-
 		} else {
 			commands[i] = &command.Command{
 				Raw:          cmdStr,

@@ -140,7 +140,8 @@ Options:
   -r, --rate=<rate>            Target rate limit (requests per second)
   -s, --shell=<shell>           Shell to use for command execution [default: /bin/sh]
       --shell-opt=<opt>         Shell option (can be repeated) [default: -c]
-  -N, --no-shell                Execute commands directly without a shell
+  -N, --no-shell                Force direct execution (no shell)
+      --force-shell             Force shell execution even with no metacharacters
       --csv=<file>              Write results to CSV file
       --markdown=<file>         Write results to Markdown file
       --version                 Show version information
@@ -180,7 +181,7 @@ Available color schemes include:
 
 ## Direct Execution Mode
 
-By default, cmdperf executes commands through a shell (usually `/bin/sh -c`). This allows for shell features like pipes, redirections, and variable expansions. However, for simple commands, you can use direct execution mode to bypass the shell:
+By default, cmdperf auto-detects whether a shell is needed: commands containing shell metacharacters (e.g. `|`, `>`, `$`, `*`) run through `/bin/sh -c`, while commands without them are executed directly to avoid shell overhead. Use `--force-shell` to always run through a shell, or `-N`/`--no-shell` to always execute directly:
 
 ```bash
 cmdperf -N "ls -la"
