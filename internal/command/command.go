@@ -81,6 +81,7 @@ func (c *Command) Execute(ctx context.Context) *Result {
 	if c.DirectExec {
 		// Direct execution mode
 		cmd = exec.CommandContext(execCtx, c.Command, c.Args...)
+		setSysProcAttr(cmd)
 	} else {
 		// Shell execution mode - use cached options if available
 		if c.cachedShellOptions == nil {
@@ -89,11 +90,29 @@ func (c *Command) Execute(ctx context.Context) *Result {
 			c.cachedShellOptions[len(c.ShellOptions)] = c.Raw
 		}
 		cmd = exec.CommandContext(execCtx, c.Shell, c.cachedShellOptions...)
+		setSysProcAttr(cmd)
 	}
 
 	// Execute and capture timing
 	startTime := time.Now()
-	err := cmd.Run()
+	doneCh := make(chan struct{})
+	if err := cmd.Start(); err != nil {
+		result.Error = err
+		result.ExitCode = -1
+		result.Duration = time.Since(startTime)
+		return result
+	}
+	go func() {
+		select {
+		case <-execCtx.Done():
+			if cmd.Process != nil {
+				killProcessGroup(cmd.Process.Pid)
+			}
+		case <-doneCh:
+		}
+	}()
+	err := cmd.Wait()
+	close(doneCh)
 	endTime := time.Now()
 	result.Duration = endTime.Sub(startTime)
 
@@ -103,11 +122,9 @@ func (c *Command) Execute(ctx context.Context) *Result {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			result.ExitCode = exitErr.ExitCode()
 		} else {
-			// For non-exit errors, use -1 as the exit code
 			result.ExitCode = -1
 		}
 
-		// Check if timeout or context cancellation
 		if execCtx.Err() == context.DeadlineExceeded {
 			result.TimedOut = true
 		}
