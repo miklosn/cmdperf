@@ -48,6 +48,7 @@ var cli struct {
 	BlockProfile     string        `name:"block-profile" help:"Write goroutine blocking profile to file"`
 	PprofServer      bool          `name:"pprof-server" help:"Start pprof HTTP server on :6060"`
 	Rate             float64       `short:"r" name:"rate" help:"Maximum rate of requests per second per worker (0 = unlimited)"`
+	Warmup           int           `name:"warmup" help:"Number of warmup runs per command (discarded)" default:"0"`
 }
 
 func splitCommandRespectingQuotes(cmd string) []string {
@@ -165,6 +166,7 @@ func main() {
 		Timeout:     cli.Timeout,
 		Duration:    cli.Duration,
 		Rate:        cli.Rate,
+		Warmup:      cli.Warmup,
 	}
 
 	runner, err := benchmark.NewRunner(commands, options)

@@ -39,6 +39,9 @@ type Options struct {
 
 	// Rate limiting option (requests per second per worker)
 	Rate float64
+
+	// Number of warmup runs per command (discarded, not counted in stats)
+	Warmup int
 }
 
 // BenchmarkMode represents the mode of benchmarking

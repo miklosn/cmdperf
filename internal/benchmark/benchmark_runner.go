@@ -26,6 +26,15 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 	workerCtx, workerCancel := context.WithCancel(ctx)
 	defer workerCancel()
 
+	// Perform warmup runs (discarded, not counted in stats, no progress events)
+	for i := 0; i < runner.Options.Warmup; i++ {
+		if contextCanceled(workerCtx) {
+			break
+		}
+		result := cmd.Execute(workerCtx)
+		command.ReleaseResult(result)
+	}
+
 	// Determine if we're using duration-based or iteration-based benchmarking
 	var workCh chan int
 	var totalIterations int
