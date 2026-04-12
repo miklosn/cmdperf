@@ -267,7 +267,8 @@ func (ui *InlineUI) render() {
 	if repeatCount < 1 {
 		repeatCount = 1
 	}
-	output.WriteString(strings.Repeat("─", repeatCount) + "\n\n")
+	output.WriteString(strings.Repeat("─", repeatCount) + "\n")
+	output.WriteString(subheaderColor(fmt.Sprintf("Timer overhead: ~%s\n\n", formatDuration(benchmark.TimerOverhead()))))
 
 	// For very narrow terminals, hide columns progressively
 	if termWidth < 80 {
@@ -436,6 +437,12 @@ func (ui *InlineUI) render() {
 		// Apply color to the entire line
 		line := fmt.Sprintf(lineFormat, lineArgs...)
 		output.WriteString(valueColor(line))
+
+		if cmd.HighVariance && cmd.Mean > 0 {
+			pct := float64(cmd.StdDev) / float64(cmd.Mean) * 100
+			output.WriteString(fmt.Sprintf("  %s\n",
+				cancelledColor(fmt.Sprintf("⚠ High variance (stddev %.0f%% of mean). Try more runs or --warmup.", pct))))
+		}
 	}
 
 	// Create a progress bar with dynamic width

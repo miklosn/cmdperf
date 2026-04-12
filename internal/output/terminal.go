@@ -24,6 +24,7 @@ func (w *TerminalWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 
 	fmt.Fprintln(writer, "\n"+headerColor("✨ cmdperf - Command Performance Benchmarking ✨"))
 	fmt.Fprintln(writer, strings.Repeat("━", 50))
+	fmt.Fprintln(writer, subheaderColor(fmt.Sprintf("Timer overhead: ~%s", FormatDuration(benchmark.TimerOverhead()))))
 
 	// Adjust header based on whether rate limiting is active
 	throughputHeader := "Throughput"
@@ -89,6 +90,12 @@ func (w *TerminalWriter) Write(writer io.Writer, stats []*benchmark.CommandStats
 			errorStr)
 
 		fmt.Fprint(writer, valueColor(line))
+
+		if stat.HighVariance && stat.Mean > 0 {
+			pct := float64(stat.StdDev) / float64(stat.Mean) * 100
+			fmt.Fprintf(writer, "  %s\n",
+				slowerColor(fmt.Sprintf("⚠ High variance (stddev %.0f%% of mean). Try more runs or --warmup.", pct)))
+		}
 
 		hasNonZeroExitCodes := false
 		for exitCode, count := range stat.ExitCodes {
