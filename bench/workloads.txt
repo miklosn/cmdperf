@@ -1,0 +1,8 @@
+# Measurement workloads. One shell command per line. Comments start with #.
+# Each command is passed as a single argument to cmdperf.
+true
+echo hello
+ls /usr/bin
+sleep 0.001
+grep -q root /etc/passwd
+sh -c 'echo hi | wc -l'
