@@ -262,12 +262,13 @@ func (ui *InlineUI) render() {
 	}
 
 	// Always print the header
-	output.WriteString(headerColor("✨ cmdperf - Command Performance Benchmarking ✨\n"))
-	repeatCount := min(termWidth-5, 60)
-	if repeatCount < 1 {
-		repeatCount = 1
+	sepWidth := min(termWidth-5, 100)
+	if sepWidth < 1 {
+		sepWidth = 1
 	}
-	output.WriteString(strings.Repeat("─", repeatCount) + "\n\n")
+
+	output.WriteString(headerColor("✨ cmdperf - Command Performance Benchmarking ✨\n"))
+	output.WriteString(strings.Repeat("─", sepWidth) + "\n\n")
 
 	// For very narrow terminals, hide columns progressively
 	if termWidth < 80 {
@@ -332,11 +333,7 @@ func (ui *InlineUI) render() {
 	// Apply color to the headers
 	headerLine := fmt.Sprintf(headerFormat, headerArgs...)
 	output.WriteString(subheaderColor(headerLine))
-	repeatCount = min(termWidth-5, 100)
-	if repeatCount < 1 {
-		repeatCount = 1
-	}
-	output.WriteString(strings.Repeat("━", repeatCount) + "\n")
+	output.WriteString(strings.Repeat("━", sepWidth) + "\n")
 
 	// Print command progress
 	for _, cmd := range ui.commands {
@@ -483,11 +480,7 @@ func (ui *InlineUI) render() {
 	}
 
 	// Print progress information at the bottom
-	repeatCount = min(termWidth-5, 60)
-	if repeatCount < 1 {
-		repeatCount = 1
-	}
-	output.WriteString(strings.Repeat("─", repeatCount) + "\n")
+	output.WriteString(strings.Repeat("─", sepWidth) + "\n")
 	elapsed := time.Since(ui.startTime).Round(time.Second)
 
 	// Format the ETA string

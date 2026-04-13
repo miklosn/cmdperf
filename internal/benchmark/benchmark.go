@@ -528,7 +528,7 @@ func calculateStdDev(stats *CommandStats) {
 	count := 0
 
 	for _, result := range stats.RecentResults {
-		if result.Error != nil {
+		if result.TimedOut {
 			continue
 		}
 
