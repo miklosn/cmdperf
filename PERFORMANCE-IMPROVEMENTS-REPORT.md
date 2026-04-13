@@ -43,7 +43,10 @@ Numbers are within noise on both platforms — expected, this is a correctness f
 
 Files: `internal/benchmark/benchmark.go` (+4 lines).
 
-Linux `true`: mean **-3.2%**, stddev **-13.5%** (t>3). macOS showed noise — GC pauses are less frequent relative to the higher fork+exec floor there. Clean, low-risk change.
+- Linux `true` (N=1000): mean **-3.2%**, stddev **-13.5%** (t>3).
+- macOS `true` first showed +1.6% mean, **+45% stddev** at N=1000 — suspicious. Re-ran on `true`-only at N=2000: mean **-2.5%**, stddev **-0.8%** (t>3). The original stddev spike was measurement noise, not a real GC-disable downside on macOS.
+
+Clean, low-risk change. No need to gate by `GOOS`.
 
 ### PR 3 — LockOSThread per worker (branch `pr3-lock-os-thread`)
 
