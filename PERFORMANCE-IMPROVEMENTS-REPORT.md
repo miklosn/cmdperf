@@ -13,6 +13,17 @@ All PRs are on local branches in this repo. None are merged. The bench harness (
 
 All raw reports live in `bench/reports/<pr>-<platform>.md`.
 
+## Phase 1a (pre-allocate slices) — already done upstream
+
+The plan's Phase 1a called for pre-allocating result slices. Inspecting `main` at `internal/benchmark/benchmark.go:150-151`:
+
+```go
+RecentResults: make([]*command.Result, 0, MaxRecentResults), // cap 1000
+MedianSamples: make([]time.Duration, 0, 1000),
+```
+
+Both are already pre-allocated with capacity 1000 (bounded circular buffer for `RecentResults`, reservoir for `MedianSamples`). No PR needed — the work was already in place before this series started.
+
 ## Summary table
 
 | PR | Change | macOS ΔMean / ΔStdDev (`true`) | Linux ΔMean / ΔStdDev (`true`) | Verdict |
