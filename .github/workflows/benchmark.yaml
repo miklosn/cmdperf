@@ -1,0 +1,89 @@
+name: Benchmark
+
+# Cross-platform performance comparison of the current ref against main.
+# Manual trigger only: benchmark runs are expensive and results from shared
+# runners are indicative, not authoritative (no CPU pinning guarantees).
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: Iterations per workload
+        default: "2000"
+        required: false
+
+jobs:
+  bench:
+    name: Bench (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up mise
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          version: 2026.8.4
+
+      - name: Build baseline (main) and candidate
+        run: |
+          go build -o bench/bin/candidate ./cmd/cmdperf
+          git worktree add /tmp/baseline origin/main
+          (cd /tmp/baseline && go build -o "$GITHUB_WORKSPACE/bench/bin/baseline" ./cmd/cmdperf)
+
+      - name: Run benchmark harness
+        run: bench/run.sh bench/bin/baseline bench/bin/candidate ci "${{ inputs.iterations || '2000' }}"
+
+      - name: Compare
+        run: |
+          echo "## ${{ matrix.os }}: main vs ${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          go run ./bench/compare bench/results/ci/baseline bench/results/ci/candidate >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bench-results-${{ matrix.os }}
+          path: bench/results/ci
+
+  bench-freebsd:
+    name: Bench (freebsd)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Run in FreeBSD VM
+        uses: vmactions/freebsd-vm@83b151f58c6047089f4c80eb5ba2039d158ce093 # v1.5.3
+        with:
+          release: "14.2"
+          usesh: false
+          prepare: pkg install -y go bash git
+          run: |
+            set -e
+            WS="$PWD"
+            git config --global --add safe.directory "$WS"
+            go build -o "$WS/bench/bin/candidate" ./cmd/cmdperf
+            git worktree add /tmp/baseline origin/main
+            (cd /tmp/baseline && go build -o "$WS/bench/bin/baseline" ./cmd/cmdperf)
+            bash bench/run.sh bench/bin/baseline bench/bin/candidate ci "${ITERATIONS:-2000}"
+            go run ./bench/compare bench/results/ci/baseline bench/results/ci/candidate > bench/results/ci/summary.md
+        env:
+          ITERATIONS: ${{ inputs.iterations || '2000' }}
+
+      - name: Summary
+        run: |
+          echo "## freebsd: main vs ${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          cat bench/results/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bench-results-freebsd
+          path: bench/results/ci
