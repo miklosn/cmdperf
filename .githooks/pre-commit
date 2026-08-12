@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Managed via mise. Runs formatting, vet and lint before each commit.
+# Enable once with: mise run setup   (or: git config core.hooksPath .githooks)
+set -euo pipefail
+
+exec mise run pre-commit

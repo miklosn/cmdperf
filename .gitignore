@@ -1,13 +1,11 @@
 .aider*
-# Devenv
-.devenv*
-devenv.local.nix
+
+# mise
+mise.local.toml
+.mise.local.toml
 
 # direnv
 .direnv
-
-# pre-commit
-.pre-commit-config.yaml
 
 dist/
 
