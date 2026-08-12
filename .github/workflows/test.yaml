@@ -14,29 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Install Nix
-      - name: Install Nix
-        uses: cachix/install-nix-action@v26
-      - uses: cachix/cachix-action@v14
+      - name: Set up mise
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
         with:
-          name: devenv
-      - name: Install devenv.sh
-        run: nix profile install nixpkgs#devenv
+          version: 2026.8.4
 
-      # Run tests using devenv
-      - name: Run tests
-        shell: devenv shell -q bash -- -e {0}
+      - name: Lint
+        run: mise run lint
+
+      - name: Test
         run: |
-          devenv test
           go mod download
-          go test -v ./...
+          mise run test
 
-      # Build the application (without releasing)
       - name: Build
-        shell: devenv shell -q bash -- -e {0}
-        run: |
-          go build -v ./...
+        run: go build -v ./...

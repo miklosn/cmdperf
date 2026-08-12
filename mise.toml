@@ -1,0 +1,39 @@
+[tools]
+go = "1.24.13"
+goreleaser = "2.17.1"
+golangci-lint = "2.12.2"
+
+[env]
+# Load project-local Go toolchain and build settings here if needed.
+
+[tasks.setup]
+description = "Install project git hooks"
+run = "git config core.hooksPath .githooks"
+
+[tasks.build]
+description = "Build the cmdperf binary"
+run = "go build -trimpath -o cmdperf ./cmd/cmdperf"
+
+[tasks.test]
+description = "Run the test suite"
+run = "go test -v ./..."
+
+[tasks.fmt]
+description = "Format Go sources"
+run = "gofmt -w ."
+
+[tasks.vet]
+description = "Run go vet"
+run = "go vet ./..."
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = "golangci-lint run"
+
+[tasks.pre-commit]
+description = "Checks run before each commit"
+depends = ["fmt", "vet", "lint"]
+
+[hooks]
+# Runs on `mise install` / entering the directory; keeps tools in sync.
+postinstall = "go mod download"
