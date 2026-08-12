@@ -2,7 +2,6 @@ package benchmark
 
 import (
 	"context"
-	"runtime"
 	"sync"
 	"time"
 
@@ -77,8 +76,7 @@ func (runner *Runner) runCommand(ctx context.Context, index int, cmd *command.Co
 	for workerID := 0; workerID < runner.Options.Parallelism; workerID++ {
 		workerWg.Add(1)
 		go func(workerID int) {
-			runtime.LockOSThread()
-			defer runtime.UnlockOSThread()
+			defer pinWorkerThread()()
 			defer workerWg.Done()
 
 			// Create a ticker for rate limiting if needed
