@@ -37,7 +37,7 @@ slug() {
 run_one() {
   local bin="$1" outdir="$2" workload="$3"
   local s; s=$(slug "$workload")
-  "${PIN[@]}" "$bin" -n "$ITERATIONS" --csv "$outdir/$s.csv" "$workload" >/dev/null 2>&1 || {
+  ${PIN[@]+"${PIN[@]}"} "$bin" -n "$ITERATIONS" --csv "$outdir/$s.csv" "$workload" >/dev/null 2>&1 || {
     echo "  ! $(basename "$bin") failed on: $workload" >&2
   }
 }
