@@ -10,6 +10,12 @@ on:
         description: Iterations per workload
         default: "2000"
         required: false
+  pull_request:
+    paths:
+      - "internal/**"
+      - "cmd/**"
+      - "bench/**"
+      - ".github/workflows/benchmark.yaml"
 
 jobs:
   bench:
