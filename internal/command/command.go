@@ -34,6 +34,7 @@ type Result struct {
 	Error            error
 	TimedOut         bool
 	ContextCancelled bool // New field to track context cancellation
+	SpawnFailed      bool // Command never started; Duration is not a valid timing sample
 }
 
 // Object pool for Result objects to reduce allocations
@@ -56,6 +57,7 @@ func (c *Command) Execute(ctx context.Context) *Result {
 	result.Error = nil
 	result.TimedOut = false
 	result.ContextCancelled = false // Reset the new field
+	result.SpawnFailed = false
 
 	// Check if context is already cancelled
 	if ctx.Err() != nil {
@@ -99,6 +101,7 @@ func (c *Command) Execute(ctx context.Context) *Result {
 	if err := cmd.Start(); err != nil {
 		result.Error = err
 		result.ExitCode = -1
+		result.SpawnFailed = true
 		result.Duration = time.Since(startTime)
 		return result
 	}
