@@ -23,8 +23,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+        os:
+          - ubuntu-latest
+          - ubuntu-22.04
+          - ubuntu-24.04-arm
+          - macos-latest
+          - macos-15-intel
+          - windows-latest
     runs-on: ${{ matrix.os }}
+    # Windows support for the bash harness is experimental
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -38,12 +49,15 @@ jobs:
 
       - name: Build baseline (main) and candidate
         run: |
-          go build -o bench/bin/candidate ./cmd/cmdperf
-          git worktree add /tmp/baseline origin/main
-          (cd /tmp/baseline && go build -o "$GITHUB_WORKSPACE/bench/bin/baseline" ./cmd/cmdperf)
+          EXT=""; [[ "$RUNNER_OS" == "Windows" ]] && EXT=".exe"
+          go build -o "bench/bin/candidate$EXT" ./cmd/cmdperf
+          git worktree add "$RUNNER_TEMP/baseline" origin/main
+          (cd "$RUNNER_TEMP/baseline" && go build -o "$GITHUB_WORKSPACE/bench/bin/baseline$EXT" ./cmd/cmdperf)
 
       - name: Run benchmark harness
-        run: bench/run.sh bench/bin/baseline bench/bin/candidate ci "${{ inputs.iterations || '2000' }}"
+        run: |
+          EXT=""; [[ "$RUNNER_OS" == "Windows" ]] && EXT=".exe"
+          bench/run.sh "bench/bin/baseline$EXT" "bench/bin/candidate$EXT" ci "${{ inputs.iterations || '2000' }}"
 
       - name: Compare
         run: |
@@ -56,9 +70,25 @@ jobs:
           name: bench-results-${{ matrix.os }}
           path: bench/results/ci
 
-  bench-freebsd:
-    name: Bench (freebsd)
+  bench-bsd:
+    name: Bench (${{ matrix.os }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [freebsd, openbsd, netbsd]
+    env:
+      ITERATIONS: ${{ inputs.iterations || '2000' }}
+      # Shared script for all three VM steps
+      VM_SCRIPT: |
+        set -e
+        WS="$PWD"
+        git config --global --add safe.directory "$WS"
+        go build -o "$WS/bench/bin/candidate" ./cmd/cmdperf
+        git worktree add /tmp/baseline origin/main
+        (cd /tmp/baseline && go build -o "$WS/bench/bin/baseline" ./cmd/cmdperf)
+        bash bench/run.sh bench/bin/baseline bench/bin/candidate ci "${ITERATIONS:-2000}"
+        go run ./bench/compare bench/results/ci/baseline bench/results/ci/candidate > bench/results/ci/summary.md
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -66,30 +96,45 @@ jobs:
           fetch-depth: 0
 
       - name: Run in FreeBSD VM
+        if: matrix.os == 'freebsd'
         uses: vmactions/freebsd-vm@83b151f58c6047089f4c80eb5ba2039d158ce093 # v1.5.3
         with:
           release: "14.2"
           usesh: false
           prepare: pkg install -y go bash git
-          run: |
-            set -e
-            WS="$PWD"
-            git config --global --add safe.directory "$WS"
-            go build -o "$WS/bench/bin/candidate" ./cmd/cmdperf
-            git worktree add /tmp/baseline origin/main
-            (cd /tmp/baseline && go build -o "$WS/bench/bin/baseline" ./cmd/cmdperf)
-            bash bench/run.sh bench/bin/baseline bench/bin/candidate ci "${ITERATIONS:-2000}"
-            go run ./bench/compare bench/results/ci/baseline bench/results/ci/candidate > bench/results/ci/summary.md
+          run: ${{ env.VM_SCRIPT }}
         env:
-          ITERATIONS: ${{ inputs.iterations || '2000' }}
+          ITERATIONS: ${{ env.ITERATIONS }}
+
+      - name: Run in OpenBSD VM
+        if: matrix.os == 'openbsd'
+        uses: vmactions/openbsd-vm@e6c68b637a12e83519688d115d57d5b0b53923cd # v1.4.6
+        with:
+          release: "7.6"
+          usesh: false
+          prepare: pkg_add go bash git
+          run: ${{ env.VM_SCRIPT }}
+        env:
+          ITERATIONS: ${{ env.ITERATIONS }}
+
+      - name: Run in NetBSD VM
+        if: matrix.os == 'netbsd'
+        uses: vmactions/netbsd-vm@00081e82b14bc40114eb97f32b4455306828516b # v1.4.6
+        with:
+          release: "10.1"
+          usesh: false
+          prepare: /usr/sbin/pkg_add go bash git mozilla-rootcerts-openssl
+          run: ${{ env.VM_SCRIPT }}
+        env:
+          ITERATIONS: ${{ env.ITERATIONS }}
 
       - name: Summary
         run: |
-          echo "## freebsd: main vs ${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          echo "## ${{ matrix.os }}: main vs ${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
           cat bench/results/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: bench-results-freebsd
+          name: bench-results-${{ matrix.os }}
           path: bench/results/ci
