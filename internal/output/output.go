@@ -17,6 +17,8 @@ func GetWriter(format string) (Writer, error) {
 		return &CSVWriter{}, nil
 	case "markdown":
 		return &MarkdownWriter{}, nil
+	case "json":
+		return &JSONWriter{}, nil
 	case "terminal":
 		return &TerminalWriter{}, nil
 	default:

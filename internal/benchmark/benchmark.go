@@ -5,6 +5,8 @@ import (
 	"errors"
 	"math"
 	"math/rand"
+	"runtime"
+	"runtime/debug"
 	"sort"
 	"sync"
 	"time"
@@ -69,6 +71,9 @@ type CommandStats struct {
 
 	// Summary statistics
 	Min, Max, Mean, Median, StdDev time.Duration
+
+	// Percentile statistics
+	P50, P95, P99 time.Duration
 
 	// Running sum for incremental mean calculation
 	RunningSum time.Duration
@@ -143,6 +148,10 @@ func contextCanceled(ctx context.Context) bool {
 
 // Run executes the benchmark for all commands
 func (runner *Runner) Run(ctx context.Context) {
+	prev := debug.SetGCPercent(-1)
+	runtime.GC()
+	defer debug.SetGCPercent(prev)
+
 	// Initialize results with pre-allocated capacity
 	for i := range runner.Commands {
 		runner.Results[i] = &CommandStats{
@@ -223,6 +232,21 @@ func (runner *Runner) Run(ctx context.Context) {
 			} else {
 				stats.Median = (stats.MedianSamples[midIdx-1] + stats.MedianSamples[midIdx]) / 2
 			}
+
+			percentile := func(p float64) time.Duration {
+				n := len(stats.MedianSamples)
+				if n == 0 {
+					return 0
+				}
+				idx := int(p * float64(n))
+				if idx >= n {
+					idx = n - 1
+				}
+				return stats.MedianSamples[idx]
+			}
+			stats.P50 = percentile(0.50)
+			stats.P95 = percentile(0.95)
+			stats.P99 = percentile(0.99)
 		}
 	}
 

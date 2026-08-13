@@ -143,6 +143,7 @@ Options:
   -N, --no-shell                Execute commands directly without a shell
       --csv=<file>              Write results to CSV file
       --markdown=<file>         Write results to Markdown file
+      --json=<file>             Write results to JSON file
       --version                 Show version information
       --fail-on-error           Exit with non-zero status if any command returns non-zero exit code
       --cpu-profile=<file>      Write CPU profile to file
@@ -220,6 +221,7 @@ The CSV output includes detailed metrics for each command:
 - Total runs and successful runs
 - Error counts and non-zero exit codes
 - Timing statistics (min, max, mean, median, standard deviation)
+- Percentiles (p50, p95, p99)
 - Throughput and target rate (if rate limiting was used)
 
 ## Markdown Output
@@ -228,6 +230,14 @@ You can export benchmark results to a Markdown file for documentation or sharing
 
 ```bash
 cmdperf --markdown=results.md "sleep 0.1" "sleep 0.2"
+```
+
+## JSON Output
+
+For CI pipelines and programmatic consumption, results can be written as structured JSON:
+
+```bash
+cmdperf --json=results.json "sleep 0.1" "sleep 0.2"
 ```
 
 ## Rate Limiting
