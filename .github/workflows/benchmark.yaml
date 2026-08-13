@@ -110,7 +110,7 @@ jobs:
         if: matrix.os == 'openbsd'
         uses: vmactions/openbsd-vm@e6c68b637a12e83519688d115d57d5b0b53923cd # v1.4.6
         with:
-          release: "7.6"
+          release: "7.9"
           usesh: false
           prepare: pkg_add go bash git
           run: ${{ env.VM_SCRIPT }}
@@ -123,7 +123,8 @@ jobs:
         with:
           release: "10.1"
           usesh: false
-          prepare: /usr/sbin/pkg_add go bash git mozilla-rootcerts-openssl
+          # pkgsrc installs go as a versioned binary (e.g. go124); expose it as plain `go`
+          prepare: /usr/sbin/pkg_add go bash git mozilla-rootcerts-openssl && sh -c 'command -v go || ln -sf /usr/pkg/bin/go1* /usr/pkg/bin/go'
           run: ${{ env.VM_SCRIPT }}
         env:
           ITERATIONS: ${{ env.ITERATIONS }}
