@@ -3,4 +3,4 @@ echo hello
 dir C:\Windows\System32\drivers
 findstr /m Windows C:\Windows\win.ini
 cd .
-echo hi | find /c /v ""
+echo hi | findstr hi
