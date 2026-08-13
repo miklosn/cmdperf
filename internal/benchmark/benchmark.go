@@ -415,9 +415,8 @@ func updateStatsIncrementally(stats *CommandStats, newResult *command.Result) {
 			stats.ErrorCount++
 		}
 
-		// For timeouts, we might want to skip timing stats
-		if newResult.TimedOut {
-			// Skip timing stats for timeouts
+		// Timeouts and spawn failures carry no valid timing sample
+		if newResult.TimedOut || newResult.SpawnFailed {
 			return
 		}
 		// For other errors, continue to update timing stats
@@ -552,7 +551,7 @@ func calculateStdDev(stats *CommandStats) {
 	count := 0
 
 	for _, result := range stats.RecentResults {
-		if result.TimedOut {
+		if result.TimedOut || result.SpawnFailed {
 			continue
 		}
 
