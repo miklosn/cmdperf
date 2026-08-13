@@ -1,0 +1,66 @@
+name: Benchmark Go versions
+
+# Measures how the Go toolchain version affects cmdperf's measurement floor
+# and jitter. Builds the same source twice — reference toolchain (the repo's
+# mise-pinned version) vs a matrix Go version — and compares with the ABAB
+# harness. Manual trigger: results answer a toolchain question, not a PR one.
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: Iterations per workload
+        default: "2000"
+        required: false
+  pull_request:
+    paths:
+      - ".github/workflows/benchmark-go.yaml"
+
+env:
+  # Keep in sync with mise.toml [tools] go
+  REFERENCE_GO: 1.24.13
+
+jobs:
+  bench-go:
+    name: Go ${{ matrix.go }} (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+        go: ["1.22.12", "1.23.12", "1.25.13", "1.26.6"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up reference Go ${{ env.REFERENCE_GO }}
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: ${{ env.REFERENCE_GO }}
+          cache: false
+
+      - name: Build reference binary
+        run: go build -o bench/bin/baseline ./cmd/cmdperf
+
+      - name: Set up Go ${{ matrix.go }}
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+
+      - name: Build candidate binary
+        run: go build -o bench/bin/candidate ./cmd/cmdperf
+
+      - name: Run benchmark harness
+        run: bench/run.sh bench/bin/baseline bench/bin/candidate ci "${{ inputs.iterations || '2000' }}"
+
+      - name: Compare
+        run: |
+          echo "## ${{ matrix.os }}: go${{ matrix.go }} vs go${REFERENCE_GO} (reference)" >> "$GITHUB_STEP_SUMMARY"
+          go run ./bench/compare bench/results/ci/baseline bench/results/ci/candidate >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bench-go${{ matrix.go }}-${{ matrix.os }}
+          path: bench/results/ci
