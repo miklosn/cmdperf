@@ -17,7 +17,7 @@ LABEL="$3"
 ITERATIONS="${4:-2000}"
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-WORKLOADS="$SCRIPT_DIR/workloads.txt"
+WORKLOADS="${WORKLOADS_FILE:-$SCRIPT_DIR/workloads.txt}"
 OUT_ROOT="$SCRIPT_DIR/results/$LABEL"
 mkdir -p "$OUT_ROOT/baseline" "$OUT_ROOT/candidate"
 

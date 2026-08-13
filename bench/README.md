@@ -24,7 +24,7 @@ go run ./bench/compare bench/results/<run-id>/baseline bench/results/<run-id>/ca
 
 ## Layout
 
-- `workloads.txt` — one command per line; `#` starts a comment
+- `workloads.txt` — one command per line; `#` starts a comment (override with `WORKLOADS_FILE`; `workloads-windows.txt` has cmd.exe-syntax equivalents)
 - `run.sh` — macOS/generic driver
 - `linux.sh` — wraps `run.sh` for OrbStack `cray-vm`
 - `compare/` — Go program that reads baseline + candidate CSVs and produces a Markdown diff

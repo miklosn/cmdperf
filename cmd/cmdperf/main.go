@@ -36,8 +36,8 @@ var cli struct {
 	ListColorSchemes bool          `name:"list-color-schemes" help:"List available color schemes"`
 	Timeout          time.Duration `short:"t" name:"timeout" help:"Timeout for each command execution" default:"1m"`
 	Duration         time.Duration `short:"d" name:"duration" help:"Total benchmark duration (overrides --runs)"`
-	Shell            string        `short:"s" name:"shell" help:"Shell to use for command execution" default:"/bin/sh"`
-	ShellOptions     []string      `name:"shell-opt" help:"Shell option (can be repeated)" default:"-c"`
+	Shell            string        `short:"s" name:"shell" help:"Shell to use for command execution" default:"${default_shell}"`
+	ShellOptions     []string      `name:"shell-opt" help:"Shell option (can be repeated)" default:"${default_shell_opt}"`
 	NoShell          bool          `short:"N" name:"no-shell" help:"Execute commands directly without a shell"`
 	CSVOutput        string        `name:"csv" help:"Write results to CSV file"`
 	MarkdownOutput   string        `name:"markdown" help:"Write results to Markdown file"`
@@ -92,6 +92,8 @@ func main() {
 		kong.Vars{
 			"version":           version,
 			"color_scheme_help": colorSchemeHelp,
+			"default_shell":     defaultShell,
+			"default_shell_opt": defaultShellOpt,
 		},
 	)
 

@@ -56,7 +56,11 @@ jobs:
 
       - name: Run benchmark harness
         run: |
-          EXT=""; [[ "$RUNNER_OS" == "Windows" ]] && EXT=".exe"
+          EXT=""
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            EXT=".exe"
+            export WORKLOADS_FILE=bench/workloads-windows.txt
+          fi
           bench/run.sh "bench/bin/baseline$EXT" "bench/bin/candidate$EXT" ci "${{ inputs.iterations || '2000' }}"
 
       - name: Compare

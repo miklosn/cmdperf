@@ -1,0 +1,6 @@
+# Measurement workloads for Windows (cmd.exe syntax). One command per line.
+echo hello
+dir C:\Windows\System32\drivers
+findstr /m Windows C:\Windows\win.ini
+cd .
+echo hi | find /c /v ""
