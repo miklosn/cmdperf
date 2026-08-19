@@ -14,6 +14,8 @@ on Linux, cmdperf is now indeed as good for high frequency benchmarking as anyth
 
 - `--json=<file>` writes results as structured JSON, for CI pipelines and
   programmatic consumption.
+- p50/p95/p99 percentiles in terminal, CSV, Markdown and JSON output, appended
+  after the existing columns.
 - The UI header shows the measured timer overhead.
 - Results with high variance (stddev above 20% of mean) are flagged with a
   warning suggesting more runs.
@@ -76,7 +78,8 @@ Release-tooling only; no changes to cmdperf itself.
 
 Initial release.
 
-[Unreleased]: https://github.com/miklosn/cmdperf/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/miklosn/cmdperf/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/miklosn/cmdperf/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/miklosn/cmdperf/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/miklosn/cmdperf/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/miklosn/cmdperf/compare/v0.1.0...v0.1.2
