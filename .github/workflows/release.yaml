@@ -56,7 +56,7 @@ jobs:
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
           echo "Using tag: $TAG"
 
-      # Install Nix
+      # Install pinned dev tooling
       - name: Set up mise
         uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
         with:
@@ -70,10 +70,17 @@ jobs:
           mise run test
           goreleaser --version
 
+      # Release notes come from CHANGELOG.md, not from the commit log: squashed
+      # PRs collapse into one subject line and lose the detail worth publishing.
+      - name: Extract release notes
+        run: |
+          scripts/release-notes.sh "${{ steps.tag.outputs.TAG }}" \
+            | tee "${{ runner.temp }}/release-notes.md"
+
       # Run GoReleaser
       - name: Run GoReleaser
         if: github.event_name == 'push' || inputs.dry_run != true
-        run: goreleaser release --clean
+        run: goreleaser release --clean --release-notes="${{ runner.temp }}/release-notes.md"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ steps.tag.outputs.TAG }}
@@ -81,7 +88,7 @@ jobs:
       # Run GoReleaser in dry-run mode
       - name: Run GoReleaser (Dry Run)
         if: inputs.dry_run == true
-        run: goreleaser release --snapshot --clean --skip=publish
+        run: goreleaser release --snapshot --clean --skip=publish --release-notes="${{ runner.temp }}/release-notes.md"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ steps.tag.outputs.TAG }}

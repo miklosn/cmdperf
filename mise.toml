@@ -34,6 +34,10 @@ run = "golangci-lint run"
 description = "Checks run before each commit"
 depends = ["fmt", "vet", "lint"]
 
+[tasks.release-notes]
+description = "Preview the release notes for a tag, e.g. mise run release-notes v0.2.0"
+run = "scripts/release-notes.sh"
+
 [hooks]
 # Runs on `mise install` / entering the directory; keeps tools in sync.
 postinstall = "go mod download"
