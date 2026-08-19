@@ -138,8 +138,8 @@ Options:
   -t, --timeout=<duration>      Timeout for each command execution [default: 1m]
   -d, --duration=<duration>     Total benchmark duration (overrides --runs)
   -r, --rate=<rate>            Target rate limit (requests per second)
-  -s, --shell=<shell>           Shell to use for command execution [default: /bin/sh]
-      --shell-opt=<opt>         Shell option (can be repeated) [default: -c]
+  -s, --shell=<shell>           Shell to use for command execution [default: /bin/sh; %COMSPEC% (cmd.exe) on Windows]
+      --shell-opt=<opt>         Shell option (can be repeated) [default: -c; /c on Windows]
   -N, --no-shell                Execute commands directly without a shell
       --csv=<file>              Write results to CSV file
       --markdown=<file>         Write results to Markdown file

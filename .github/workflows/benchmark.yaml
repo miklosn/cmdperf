@@ -31,6 +31,7 @@ jobs:
           - macos-15-intel
           - windows-latest
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
     # Windows support for the bash harness is experimental
     continue-on-error: ${{ matrix.os == 'windows-latest' }}
     defaults:
@@ -56,8 +57,15 @@ jobs:
 
       - name: Run benchmark harness
         run: |
-          EXT=""; [[ "$RUNNER_OS" == "Windows" ]] && EXT=".exe"
-          bench/run.sh "bench/bin/baseline$EXT" "bench/bin/candidate$EXT" ci "${{ inputs.iterations || '2000' }}"
+          EXT=""
+          ITER="${{ inputs.iterations || '2000' }}"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            EXT=".exe"
+            export WORKLOADS_FILE=bench/workloads-windows.txt
+            # cmd.exe spawns average >200ms on runners; 2000 iterations blows the job timeout
+            ITER=200
+          fi
+          bench/run.sh "bench/bin/baseline$EXT" "bench/bin/candidate$EXT" ci "$ITER"
 
       - name: Compare
         run: |
