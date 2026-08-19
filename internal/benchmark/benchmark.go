@@ -75,6 +75,8 @@ type CommandStats struct {
 	// Percentile statistics
 	P50, P95, P99 time.Duration
 
+	HighVariance bool
+
 	// Running sum for incremental mean calculation
 	RunningSum time.Duration
 
@@ -218,6 +220,10 @@ func (runner *Runner) Run(ctx context.Context) {
 	for _, stats := range runner.Results {
 		// Recalculate standard deviation for final results
 		calculateStdDev(stats)
+
+		if stats.StdDev > 0 && stats.Mean > 0 && float64(stats.StdDev)/float64(stats.Mean) > 0.2 {
+			stats.HighVariance = true
+		}
 
 		// Ensure median is up-to-date by sorting samples
 		if len(stats.MedianSamples) > 0 {
